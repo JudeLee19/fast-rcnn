@@ -35,7 +35,7 @@ CLASSES = ('__background__',
            'motorbike', 'person', 'pottedplant',
            'sheep', 'sofa', 'train', 'tvmonitor')
 '''
-CLASSES = ('__background__','n02958343','n02769748')
+CLASSES = ('__background__','person')
 
 NETS = {'vgg16': ('VGG16',
                   'vgg16_fast_rcnn_iter_40000.caffemodel'),
@@ -88,13 +88,13 @@ def run_dlib_selective_search(image_name):
     proposals = np.array(proposals)
     return proposals
 
-def demo(net, image_name, classes):
+def demo(net, im_file, classes):
     """Detect object classes in an image using pre-computed object proposals."""
 
     # Load pre-computed Selected Search object proposals
     #box_file = os.path.join(cfg.ROOT_DIR, 'data', 'demo',image_name + '_boxes.mat')
     #obj_proposals = sio.loadmat(box_file)['boxes']
-    im_file = os.path.join(cfg.ROOT_DIR, 'data', 'demo', image_name + '.jpg')
+    #im_file = os.path.join(cfg.ROOT_DIR, 'data', 'demo', image_name)
     obj_proposals = run_dlib_selective_search(im_file)
 
     # Load the demo image
@@ -112,20 +112,24 @@ def demo(net, image_name, classes):
     CONF_THRESH = 0.8
     NMS_THRESH = 0.3
     for cls in classes:
-        cls_ind = CLASSES.index(cls)
-        cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
+		cls_ind = CLASSES.index(cls)
+		cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
 
-        cls_scores = scores[:, cls_ind]
-        keep = np.where(cls_scores >= CONF_THRESH)[0]
-        cls_boxes = cls_boxes[keep, :]
-        cls_scores = cls_scores[keep]
-        dets = np.hstack((cls_boxes,
-                          cls_scores[:, np.newaxis])).astype(np.float32)
-        keep = nms(dets, NMS_THRESH)
-        dets = dets[keep, :]
-        print 'All {} detections with p({} | box) >= {:.1f}'.format(cls, cls,
-                                                                    CONF_THRESH)
-        vis_detections(im, cls, dets, thresh=CONF_THRESH)
+		cls_scores = scores[:, cls_ind]
+		keep = np.where(cls_scores >= CONF_THRESH)[0]
+		try:
+			cls_boxes = cls_boxes[keep, :]
+			cls_scores = cls_scores[keep]
+			dets = np.hstack((cls_boxes,cls_scores[:, np.newaxis])).astype(np.float32)
+			keep = nms(dets, NMS_THRESH)
+			dets = dets[keep, :]
+		except Exception,e:
+			dets = np.hstack((cls_boxes,cls_scores[:, np.newaxis])).astype(np.float32)
+		print 'All {} detections with p({} | box) >= {:.1f}'.format(cls, cls,
+		                                                       CONF_THRESH)
+		if 0:
+		    vis_detections(im, cls, dets, thresh=CONF_THRESH)
+		return im,dets
 
 def parse_args():
     """Parse input arguments."""
@@ -142,29 +146,101 @@ def parse_args():
 
     return args
 
+def load_inria_annotation(index):
+    """
+    Load image and bounding boxes info from txt files of INRIAPerson.
+    """
+    filename = os.path.join('/home/xuetingli/test/INRIA/data/Annotations', index.split('.')[0] + '.txt')
+    # print 'Loading: {}'.format(filename)
+    with open(filename) as f:
+            data = f.read()
+    import re
+    objs = re.findall('\(\d+, \d+\)[\s\-]+\(\d+, \d+\)', data)
+    
+    num_objs = len(objs)
+
+    boxes = np.zeros((num_objs, 4), dtype=np.uint16)
+
+    # Load object bounding boxes into a data frame.
+    for ix, obj in enumerate(objs):
+        # Make pixel indexes 0-based
+        coor = re.findall('\d+', obj)
+        x1 = float(coor[0])
+        y1 = float(coor[1])
+        x2 = float(coor[2])
+        y2 = float(coor[3])
+        boxes[ix, :] = [x1, y1, x2, y2]
+
+
+    return boxes
+        
 if __name__ == '__main__':
-    args = parse_args()
+	args = parse_args()
 
-    prototxt = os.path.join(cfg.ROOT_DIR, 'models', NETS[args.demo_net][0],
-                            'test.prototxt')
-    print prototxt
-    caffemodel = os.path.join(cfg.ROOT_DIR, 'data', 'fast_rcnn_models',
-                              NETS[args.demo_net][1])
+	prototxt = os.path.join(cfg.ROOT_DIR, 'models', NETS[args.demo_net][0],
+	                        'test.prototxt')
+	#print prototxt
+	caffemodel = os.path.join(cfg.ROOT_DIR, 'data', 'fast_rcnn_models',
+	                          NETS[args.demo_net][1])
 
-    if not os.path.isfile(caffemodel):
-        raise IOError(('{:s} not found.\nDid you run ./data/script/'
-                       'fetch_fast_rcnn_models.sh?').format(caffemodel))
+	if not os.path.isfile(caffemodel):
+	    raise IOError(('{:s} not found.\nDid you run ./data/script/'
+	                   'fetch_fast_rcnn_models.sh?').format(caffemodel))
 
-    if args.cpu_mode:
-        caffe.set_mode_cpu()
-    else:
-        caffe.set_mode_gpu()
-        caffe.set_device(args.gpu_id)
-    net = caffe.Net(prototxt, caffemodel, caffe.TEST)
+	if args.cpu_mode:
+	    caffe.set_mode_cpu()
+	else:
+	    caffe.set_mode_gpu()
+	    caffe.set_device(args.gpu_id)
+	net = caffe.Net(prototxt, caffemodel, caffe.TEST)
 
-    print '\n\nLoaded network {:s}'.format(caffemodel)
+	print '\n\nLoaded network {:s}'.format(caffemodel)
+	#demo(net,'/home/xuetingli/test/INRIA/data/Images/crop001001.png',('person',))
+	#demo(net,'/home/xuetingli/test/INRIA/data/Images/crop001002.png',('person',))
+	#demo(net,'/home/xuetingli/test/INRIA/data/Images/crop001003.png',('person',))
 
-    demo(net,'bag',('n02769748',))
+	imgPath = '/home/xuetingli/test/INRIA/data/Images/'
+	fp = 0
+	tp = 0
+	totalGTBoxes = 0
 
+	for parent,dirnames,filenames in os.walk(imgPath):
+		for imgnm in filenames:
 
-    plt.show()
+			#imgnm = 'crop001008'
+			[im,dets] = demo(net,imgPath+imgnm,('person',))
+
+			inds = np.where(dets[:, -1] >= 0.8)[0]
+
+			if not (len(inds)==0):        
+				#load ground truth boxes
+				boxes = load_inria_annotation(imgnm)
+				BeenChoosen = [1 for i in range(len(dets))]
+				totalGTBoxes = totalGTBoxes + len(boxes)
+				imax = 0
+				for bbgt in boxes:
+					#loop over dets to find maximum overlap
+					ovmax = -1000000
+					for i in range(0,len(dets)):
+						det = dets[i]
+						bb = det[0:4]
+						score = det[-1]
+						bi = [max(bb[0],bbgt[0]),max(bb[1],bbgt[1]),min(bb[2],bbgt[2]),min(bb[3],bbgt[3])]
+						iw = bi[2]-bi[0]+1
+						ih = bi[3]-bi[1]+1
+						if iw>0 and ih >0:
+							ua=(bb[2]-bb[0]+1)*(bb[3]-bb[1]+1)+(bbgt[2]-bbgt[0]+1)*(bbgt[3]-bbgt[1]+1)-iw*ih;
+							ov = iw*ih/ua;
+							if ov > ovmax:
+								ovmax = ov
+								imax = i
+					print 'ovmax',ovmax
+					if ovmax > 0.5:
+						tp = tp + 1
+						BeenChoosen[imax] = 0
+				fp = fp + sum(BeenChoosen)
+	print 'the number of true positive is',tp
+	print 'the number of false positive is',fp
+	print 'the number of total bboxes is ',totalGTBoxes
+        
+	plt.show()

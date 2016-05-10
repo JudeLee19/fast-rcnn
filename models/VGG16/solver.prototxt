@@ -14,3 +14,5 @@ snapshot: 0
 # We still use the snapshot prefix, though
 snapshot_prefix: "vgg16_fast_rcnn"
 #debug_info: true
+solver_mode: GPU
+

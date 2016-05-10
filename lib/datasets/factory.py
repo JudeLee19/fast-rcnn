@@ -10,7 +10,10 @@
 __sets = {}
 
 import datasets.pascal_voc
+import datasets.inria
+import datasets.imagenet
 import numpy as np
+
 
 def _selective_search_IJCV_top_k(split, year, top_k):
     """Return an imdb that uses the top k proposals from the selective search
@@ -36,6 +39,23 @@ for top_k in np.arange(1000, 11000, 1000):
             name = 'voc_{}_{}_top_{:d}'.format(year, split, top_k)
             __sets[name] = (lambda split=split, year=year, top_k=top_k:
                     _selective_search_IJCV_top_k(split, year, top_k))
+
+# Set up inria_<split> using selective search "fast" mode
+inria_devkit_path = '/home/xuetingli/test/INRIA'
+for split in ['train', 'test']:
+    name = '{}_{}'.format('inria', split)
+    __sets[name] = (lambda split=split: datasets.inria(split, inria_devkit_path))
+   
+# Set up inria_<split> using selective search "fast" mode
+imagenet_devkit_path = '/home/dev/jude/data/ILSVRC2015_DET_sample'
+for split in ['train', 'test']:
+    name = '{}_{}'.format('imagenet', split)
+    __sets[name] = (lambda split=split: datasets.imagenet(split, imagenet_devkit_path))
+
+towncenter_devkit_path = '/home/szy/TownCenter'
+for split in ['test']:
+   name = '{}_{}'.format('towncenter', split)
+   __sets[name] = (lambda split=split: datasets.inria(split, towncenter_devkit_path))
 
 def get_imdb(name):
     """Get an imdb (image database) by name."""

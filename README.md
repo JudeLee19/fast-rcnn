@@ -1,5 +1,3 @@
-### This code base is no longer maintained and exists as a historical artifact to supplement my ICCV 2015 paper. For more recent work that's faster and more accurrate, please see [Faster R-CNN](https://github.com/rbgirshick/py-faster-rcnn) (which also includes functionality for training Fast R-CNN).
-
 # *Fast* R-CNN: Fast Region-based Convolutional Networks for object detection
 
 Created by Ross Girshick at Microsoft Research, Redmond.
@@ -12,7 +10,7 @@ Created by Ross Girshick at Microsoft Research, Redmond.
  - has a significantly higher mAP on PASCAL VOC than both R-CNN and SPPnet,
  - and is written in Python and C++/Caffe.
 
-Fast R-CNN was initially described in an [arXiv tech report](http://arxiv.org/abs/1504.08083) and later published at ICCV 2015.
+Fast R-CNN was initially described in an [arXiv tech report](http://arxiv.org/abs/1504.08083).
 
 ### License
 
@@ -22,10 +20,10 @@ Fast R-CNN is released under the MIT License (refer to the LICENSE file for deta
 
 If you find Fast R-CNN useful in your research, please consider citing:
 
-    @inproceedings{girshickICCV15fastrcnn,
+    @article{girshick15fastrcnn,
         Author = {Ross Girshick},
         Title = {Fast R-CNN},
-        Booktitle = {International Conference on Computer Vision ({ICCV})},
+        Journal = {arXiv preprint arXiv:1504.08083},
         Year = {2015}
     }
     
@@ -148,9 +146,9 @@ Apologies if I've left your method off this list. Feel free to contact me and as
 1. Download the training, validation, test data and VOCdevkit
 
 	```Shell
-	wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
-	wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar
-	wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCdevkit_08-Jun-2007.tar
+	wget http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
+	wget http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCtest_06-Nov-2007.tar
+	wget http://pascallin.ecs.soton.ac.uk/challenges/VOC/voc2007/VOCdevkit_08-Jun-2007.tar
 	```
 	
 2. Extract all of these tars into one directory named `VOCdevkit`
